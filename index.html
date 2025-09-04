@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分貝計</title>
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --primary-text-color: #ecf0f1;
+            --secondary-text-color: #bdc3c7;
+            --display-bg-color: #34495e;
+            --icon-color: #ecf0f1;
+            --icon-hover-color: #95a5a6;
+            --warning-color: #e74c3c;
+            --modal-bg: #34495e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.1s ease;
+        }
+
+        .decibel-meter {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--display-bg-color);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .display {
+            margin-bottom: 30px;
+        }
+
+        .current-db-display {
+            font-size: 5rem;
+            font-weight: 200;
+            line-height: 1;
+        }
+
+        .current-db-display span {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-left: 5px;
+            color: var(--secondary-text-color);
+        }
+        
+        .info-display {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .info-box {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-box .value {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .info-box .label {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+            text-transform: uppercase;
+        }
+
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            color: var(--icon-color);
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            color: var(--icon-hover-color);
+            transform: scale(1.1);
+        }
+        
+        .icon-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .icon-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+        
+        #playPauseBtn .pause-icon { display: none; }
+        #playPauseBtn.playing .play-icon { display: none; }
+        #playPauseBtn.playing .pause-icon { display: block; }
+
+        /* Warning Flash */
+        .warning-flash {
+            animation: flash 0.5s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { background-color: var(--warning-color); }
+            50% { background-color: var(--bg-color); }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            margin: auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            color: var(--secondary-text-color);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--secondary-text-color);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--display-bg-color);
+            border-radius: 8px;
+            color: var(--primary-text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        #saveSettingsBtn {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #saveSettingsBtn:hover {
+            background-color: #2980b9;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="decibel-meter">
+        <div class="display">
+            <div class="current-db-display">
+                <span id="currentDbValue">--</span><span>dB</span>
+            </div>
+            <div class="info-display">
+                <div class="info-box">
+                    <span id="avgDbValue" class="value">--</span>
+                    <span class="label">平均分貝</span>
+                </div>
+                <div class="info-box">
+                    <span id="timerValue" class="value">00:00</span>
+                    <span class="label">剩餘時間</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="settingsBtn" class="icon-btn" title="設定">
+                <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+            </button>
+            <button id="playPauseBtn" class="icon-btn" title="開始">
+                <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>設定</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="durationInput">倒數時間 (秒)</label>
+                <input type="number" id="durationInput" value="60" min="1">
+            </div>
+            <div class="form-group">
+                <label for="thresholdInput">平均分貝警示值 (dB)</label>
+                <input type="number" id="thresholdInput" value="85" min="0">
+            </div>
+            <button id="saveSettingsBtn">儲存</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentDbValueEl = document.getElementById('currentDbValue');
+            const avgDbValueEl = document.getElementById('avgDbValue');
+            const timerValueEl = document.getElementById('timerValue');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeModalBtn = document.querySelector('.close-btn');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            const durationInput = document.getElementById('durationInput');
+            const thresholdInput = document.getElementById('thresholdInput');
+
+            let audioContext;
+            let analyser;
+            let microphone;
+            let javascriptNode;
+            
+            let isRunning = false;
+            let isPaused = false;
+            let timerInterval;
+            let secondsRemaining = 900;
+            let decibelThreshold = 65;
+
+            let dbHistory = [];
+            let sumOfDb = 0;
+
+            const SMOOTHING_FACTOR = 0.8;
+            let smoothedDb = 0;
+
+            // --- UI Interaction ---
+
+            playPauseBtn.addEventListener('click', toggleMeasurement);
+            settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
+            closeModalBtn.addEventListener('click', () => settingsModal.style.display = 'none');
+            window.addEventListener('click', (event) => {
+                if (event.target == settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+            });
+
+            saveSettingsBtn.addEventListener('click', () => {
+                secondsRemaining = parseInt(durationInput.value, 10) || 60;
+                decibelThreshold = parseInt(thresholdInput.value, 10) || 85;
+                updateTimerDisplay();
+                settingsModal.style.display = 'none';
+                if (!isRunning) {
+                     resetValues();
+                }
+            });
+
+            function toggleMeasurement() {
+                if (!isRunning) {
+                    startMeasurement();
+                } else {
+                    pauseMeasurement();
+                }
+            }
+
+            async function startMeasurement() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('您的瀏覽器不支援麥克風存取！');
+                    return;
+                }
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    setupAudioNodes(stream);
+                    
+                    isRunning = true;
+                    isPaused = false;
+                    playPauseBtn.classList.add('playing');
+                    playPauseBtn.title = '暫停';
+                    settingsBtn.disabled = true;
+
+                    resetValues();
+                    startTimer();
+                } catch (err) {
+                    alert('無法存取您的麥克風。請檢查權限。');
+                    console.error('Error accessing microphone:', err);
+                }
+            }
+
+            function pauseMeasurement() {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    playPauseBtn.classList.remove('playing');
+                    playPauseBtn.title = '繼續';
+                    clearInterval(timerInterval);
+                    if (javascriptNode) javascriptNode.disconnect();
+                } else {
+                    playPauseBtn.classList.add('playing');
+                    playPauseBtn.title = '暫停';
+                    startTimer();
+                     if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destination);
+                }
+            }
+            
+            function stopMeasurement() {
+                isRunning = false;
+                isPaused = false;
+                playPauseBtn.classList.remove('playing');
+                playPauseBtn.title = '開始';
+                settingsBtn.disabled = false;
+                
+                clearInterval(timerInterval);
+                document.body.classList.remove('warning-flash');
+
+                if (microphone) microphone.disconnect();
+                if (analyser) analyser.disconnect();
+                if (javascriptNode) javascriptNode.disconnect();
+                if(audioContext && audioContext.state !== 'closed') audioContext.close();
+            }
+
+            function setupAudioNodes(stream) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+                analyser.smoothingTimeConstant = 0.8;
+                analyser.fftSize = 1024;
+
+                microphone.connect(analyser);
+                analyser.connect(javascriptNode);
+                javascriptNode.connect(audioContext.destination);
+
+                javascriptNode.onaudioprocess = () => {
+                    if(isPaused) return;
+
+                    const array = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(array);
+                    let values = 0;
+                    const length = array.length;
+                    for (let i = 0; i < length; i++) {
+                        values += (array[i] * array[i]);
+                    }
+                    const volume = Math.sqrt(values / length);
+                    
+                    const decibel = 20 * Math.log10(volume) + 50; 
+                    const validDb = isFinite(decibel) && decibel > 0 ? decibel : 0;
+                    
+                    smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * validDb;
+                    updateDbDisplay(smoothedDb);
+                    
+                    // Store for averaging
+                    dbHistory.push(smoothedDb);
+                    sumOfDb += smoothedDb;
+
+                    // Calculate average and update display
+                    const avgDb = sumOfDb / dbHistory.length;
+                    updateAvgDbDisplay(avgDb);
+
+                    // *** REVISED: Check threshold using the AVERAGE value ***
+                    checkThreshold(avgDb);
+                };
+            }
+
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    if (secondsRemaining > 0) {
+                        secondsRemaining--;
+                        updateTimerDisplay();
+                    } else {
+                        stopMeasurement();
+                        alert('時間到！');
+                    }
+                }, 1000);
+            }
+            
+            function resetValues() {
+                dbHistory = [];
+                sumOfDb = 0;
+                secondsRemaining = parseInt(durationInput.value, 10);
+                updateTimerDisplay();
+                currentDbValueEl.textContent = '--';
+                avgDbValueEl.textContent = '--';
+                document.body.classList.remove('warning-flash');
+            }
+            
+            function updateTimerDisplay() {
+                const minutes = Math.floor(secondsRemaining / 60).toString().padStart(2, '0');
+                const seconds = (secondsRemaining % 60).toString().padStart(2, '0');
+                timerValueEl.textContent = `${minutes}:${seconds}`;
+            }
+
+            function updateDbDisplay(db) {
+                currentDbValueEl.textContent = Math.round(db);
+            }
+            
+            function updateAvgDbDisplay(avg) {
+                if (dbHistory.length > 0) {
+                    avgDbValueEl.textContent = Math.round(avg);
+                }
+            }
+            
+            // This function now checks the value passed to it (which will be the average dB)
+            function checkThreshold(value) {
+                if (value > decibelThreshold) {
+                    document.body.classList.add('warning-flash');
+                } else {
+                    document.body.classList.remove('warning-flash');
+                }
+            }
+            
+            // Initial state
+            updateTimerDisplay();
+        });
+    </script>
+
+</body>
+</html>
