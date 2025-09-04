@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分貝計</title>
+    <title>HTML 分貝計 (15分鐘預設)</title>
     <style>
         :root {
             --bg-color: #2c3e50;
@@ -226,7 +226,7 @@
                     <span class="label">平均分貝</span>
                 </div>
                 <div class="info-box">
-                    <span id="timerValue" class="value">00:00</span>
+                    <span id="timerValue" class="value">15:00</span>
                     <span class="label">剩餘時間</span>
                 </div>
             </div>
@@ -251,8 +251,8 @@
                 <span class="close-btn">&times;</span>
             </div>
             <div class="form-group">
-                <label for="durationInput">倒數時間 (秒)</label>
-                <input type="number" id="durationInput" value="60" min="1">
+                <label for="durationInput">倒數時間 (分鐘)</label>
+                <input type="number" id="durationInput" value="15" min="1">
             </div>
             <div class="form-group">
                 <label for="thresholdInput">平均分貝警示值 (dB)</label>
@@ -283,8 +283,9 @@
             let isRunning = false;
             let isPaused = false;
             let timerInterval;
-            let secondsRemaining = 900;
-            let decibelThreshold = 65;
+            // *** REVISED: Default time set to 15 minutes (in seconds) ***
+            let secondsRemaining = 15 * 60;
+            let decibelThreshold = 85;
 
             let dbHistory = [];
             let sumOfDb = 0;
@@ -304,10 +305,15 @@
             });
 
             saveSettingsBtn.addEventListener('click', () => {
-                secondsRemaining = parseInt(durationInput.value, 10) || 60;
+                // *** REVISED: Read value as minutes and convert to seconds ***
+                const durationInMinutes = parseInt(durationInput.value, 10) || 15;
+                secondsRemaining = durationInMinutes * 60;
                 decibelThreshold = parseInt(thresholdInput.value, 10) || 85;
+                
                 updateTimerDisplay();
                 settingsModal.style.display = 'none';
+                
+                // If not running, pressing save should update the timer immediately
                 if (!isRunning) {
                      resetValues();
                 }
@@ -407,15 +413,12 @@
                     smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * validDb;
                     updateDbDisplay(smoothedDb);
                     
-                    // Store for averaging
                     dbHistory.push(smoothedDb);
                     sumOfDb += smoothedDb;
 
-                    // Calculate average and update display
                     const avgDb = sumOfDb / dbHistory.length;
                     updateAvgDbDisplay(avgDb);
 
-                    // *** REVISED: Check threshold using the AVERAGE value ***
                     checkThreshold(avgDb);
                 };
             }
@@ -435,7 +438,10 @@
             function resetValues() {
                 dbHistory = [];
                 sumOfDb = 0;
-                secondsRemaining = parseInt(durationInput.value, 10);
+                // *** REVISED: Always get the latest setting from input (in minutes) and convert ***
+                const durationInMinutes = parseInt(durationInput.value, 10) || 15;
+                secondsRemaining = durationInMinutes * 60;
+                
                 updateTimerDisplay();
                 currentDbValueEl.textContent = '--';
                 avgDbValueEl.textContent = '--';
@@ -458,7 +464,6 @@
                 }
             }
             
-            // This function now checks the value passed to it (which will be the average dB)
             function checkThreshold(value) {
                 if (value > decibelThreshold) {
                     document.body.classList.add('warning-flash');
