@@ -508,8 +508,11 @@
             let dbHistory = [];
             let sumOfDb = 0;
 
-            const SMOOTHING_FACTOR = 0.8;
-            let smoothedDb = 0;
+            // 調整平滑係數和最小分貝值以防止歸零
+            const SMOOTHING_FACTOR = 0.6; // 降低平滑係數以提高反應速度
+            const MIN_DB_VALUE = 20; // 設定最小分貝值
+            let smoothedDb = MIN_DB_VALUE;
+            let lastValidDb = MIN_DB_VALUE;
 
             // --- UI Interaction ---
 
@@ -550,7 +553,13 @@
                 }
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false
+                        } 
+                    });
                     setupAudioNodes(stream);
                     
                     isRunning = true;
@@ -578,7 +587,7 @@
                     playPauseBtn.classList.add('playing');
                     playPauseBtn.title = '暫停';
                     startTimer();
-                     if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destination);
+                    if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destination);
                 }
             }
             
@@ -604,8 +613,11 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
 
-                analyser.smoothingTimeConstant = 0.8;
-                analyser.fftSize = 1024;
+                // 調整分析器設定以提高靈敏度
+                analyser.smoothingTimeConstant = 0.3; // 降低內置平滑
+                analyser.fftSize = 2048; // 增加解析度
+                analyser.minDecibels = -90;
+                analyser.maxDecibels = -10;
 
                 microphone.connect(analyser);
                 analyser.connect(javascriptNode);
@@ -614,28 +626,56 @@
                 javascriptNode.onaudioprocess = () => {
                     if(isPaused) return;
 
-                    const array = new Uint8Array(analyser.frequencyBinCount);
-                    analyser.getByteFrequencyData(array);
-                    let values = 0;
-                    const length = array.length;
-                    for (let i = 0; i < length; i++) {
-                        values += (array[i] * array[i]);
+                    // 使用頻域數據計算分貝值
+                    const freqArray = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(freqArray);
+                    
+                    // 計算RMS值
+                    let sum = 0;
+                    let validSamples = 0;
+                    
+                    for (let i = 0; i < freqArray.length; i++) {
+                        if (freqArray[i] > 0) {
+                            sum += freqArray[i] * freqArray[i];
+                            validSamples++;
+                        }
                     }
-                    const volume = Math.sqrt(values / length);
                     
-                    const decibel = 20 * Math.log10(volume) + 50; 
-                    const validDb = isFinite(decibel) && decibel > 0 ? decibel : 0;
+                    if (validSamples > 0) {
+                        const rms = Math.sqrt(sum / validSamples);
+                        // 改進的分貝計算公式
+                        let decibel = 20 * Math.log10(rms / 255) + 94; // 標準化到0-94dB範圍
+                        
+                        // 確保分貝值在合理範圍內
+                        decibel = Math.max(MIN_DB_VALUE, Math.min(120, decibel));
+                        
+                        if (isFinite(decibel) && decibel >= MIN_DB_VALUE) {
+                            lastValidDb = decibel;
+                            // 應用指數平滑
+                            smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * decibel;
+                        } else {
+                            // 如果計算結果無效，使用上一個有效值進行衰減
+                            smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * lastValidDb * 0.95;
+                        }
+                    } else {
+                        // 沒有有效樣本時，緩慢衰減到最小值
+                        smoothedDb = Math.max(MIN_DB_VALUE, smoothedDb * 0.98);
+                    }
                     
-                    smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * validDb;
+                    // 確保最終值不低於最小值
+                    smoothedDb = Math.max(MIN_DB_VALUE, smoothedDb);
+                    
                     updateDbDisplay(smoothedDb);
                     
-                    dbHistory.push(smoothedDb);
-                    sumOfDb += smoothedDb;
+                    // 只有當分貝值高於最小閾值時才加入歷史記錄
+                    if (smoothedDb > MIN_DB_VALUE + 5) {
+                        dbHistory.push(smoothedDb);
+                        sumOfDb += smoothedDb;
 
-                    const avgDb = sumOfDb / dbHistory.length;
-                    updateAvgDbDisplay(avgDb);
-
-                    checkThreshold(avgDb);
+                        const avgDb = sumOfDb / dbHistory.length;
+                        updateAvgDbDisplay(avgDb);
+                        checkThreshold(avgDb);
+                    }
                 };
             }
 
@@ -654,6 +694,8 @@
             function resetValues() {
                 dbHistory = [];
                 sumOfDb = 0;
+                smoothedDb = MIN_DB_VALUE;
+                lastValidDb = MIN_DB_VALUE;
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
                 
