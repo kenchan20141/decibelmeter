@@ -766,13 +766,6 @@
             let baselineNoise = 0;
             let isCalibrated = false;
 
-            // 新增：穩定期和異常值過濾參數
-            let measurementStartTime = 0;
-            let isStabilizing = false;
-            let recentDbValues = [];
-            const STABILIZATION_PERIOD = 2000; // 2秒穩定期
-            const RECENT_VALUES_COUNT = 10;
-
             // 改進的音頻處理參數
             const SMOOTHING_FACTOR = 0.2;
             const NOISE_GATE_THRESHOLD = 0.005;
@@ -975,16 +968,10 @@
 
                     resetValues();
                     
-                    // 新增：設定穩定期開始時間
-                    measurementStartTime = Date.now();
-                    isStabilizing = true;
-                    
-                    // 新增：等待穩定期結束後再進行校準
-                    setTimeout(async () => {
-                        if (calibrationMode === 'auto' && !isCalibrated && isRunning) {
-                            await performAutoCalibration();
-                        }
-                    }, STABILIZATION_PERIOD + 100);
+                    // 執行校準
+                    if (calibrationMode === 'auto' && !isCalibrated) {
+                        await performAutoCalibration();
+                    }
                     
                     startTimer();
                 } catch (err) {
@@ -1082,17 +1069,6 @@
             }
 
             function processAudioData() {
-                const currentTime = Date.now();
-                
-                // 新增：穩定期內不進行任何計算和記錄
-                if (isStabilizing && (currentTime - measurementStartTime < STABILIZATION_PERIOD)) {
-                    currentDbValueEl.textContent = '穩定中';
-                    return;
-                } else if (isStabilizing) {
-                    isStabilizing = false;
-                    currentDbValueEl.textContent = '--';
-                }
-
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
                 const freqArray = new Float32Array(bufferLength);
@@ -1142,28 +1118,11 @@
                         calibrationSamples.push(rawDb);
                     }
                 }
-
-                // 新增：異常值檢測和過濾
-                recentDbValues.push(currentDb);
-                if (recentDbValues.length > RECENT_VALUES_COUNT) {
-                    recentDbValues.shift();
-                }
-
-                // 如果是剛開始的幾個數值，且明顯異常，則忽略
-                if (recentDbValues.length >= 3) {
-                    const avgRecent = recentDbValues.reduce((a, b) => a + b, 0) / recentDbValues.length;
-                    const deviation = Math.abs(currentDb - avgRecent);
-                    
-                    // 如果偏差過大且是測量初期，則使用平均值
-                    if (deviation > 20 && dbHistory.length < 50) {
-                        currentDb = avgRecent;
-                    }
-                }
                 
                 updateDbDisplay(currentDb);
                 
-                // 修改：檢查是否超過單次限制，增加穩定期和數據量檢查
-                if (currentDb > maxDecibelLimit && showExceedanceContainer && !isStabilizing && dbHistory.length > 20) {
+                // 檢查是否超過單次限制
+                if (currentDb > maxDecibelLimit && showExceedanceContainer) {
                     if (dbHistory.length === 0 || dbHistory[dbHistory.length - 1] <= maxDecibelLimit) {
                         // 新的超過事件
                         currentExceedanceCount++;
@@ -1201,8 +1160,6 @@
                 calibrationSamples = [];
                 baselineNoise = 0;
                 currentExceedanceCount = 0;
-                recentDbValues = []; // 新增
-                isStabilizing = false; // 新增
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
