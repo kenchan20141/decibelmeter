@@ -511,8 +511,8 @@
             // 改進的音頻處理參數
             const SMOOTHING_FACTOR = 0.3; // 降低平滑因子，讓反應更靈敏
             const DECAY_RATE = 0.95; // 衰減率，當音量低時緩慢衰減
-            const MIN_DB = 20; // 最小分貝值
-            const MAX_DB = 120; // 最大分貝值
+            const MIN_DB = 0; // 最小分貝值
+            const MAX_DB = 100; // 最大分貝值
             const SILENCE_THRESHOLD = 0.01; // 靜音閾值
             
             let currentDb = MIN_DB;
