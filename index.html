@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -136,13 +137,13 @@
         }
 
         .warning-value {
-            position: absolute;
-            bottom: 8px;
-            right: 12px;
-            font-size: 0.85rem;
-            color: #ff6b6b ;
-            opacity: 0.8;
-        }
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.85rem;
+    color: #ff6b6b ;
+    opacity: 0.8;    /* 調整透明度 */
+}
 
         .info-box.avg-highlight .warning-value {
             color: #e8f4fd;
@@ -751,26 +752,26 @@
             }
         }
 
-        .copyright-footer {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            padding: 5px 10px;
-            background-color: #f1f1f1 !important;
-            color: #000000 !important;
-        }
+.copyright-footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding: 5px 10px;
+    background-color: #f1f1f1 !important;
+    color: #000000 !important;
+}
 
-        .copyright-footer p {
-            margin: 0 !important;
-            font-size: 14px !important;
-            color: #000000 !important;
-        }
+.copyright-footer p {
+    margin: 0 !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+}
 
-        @media (max-width: 600px) {
-            .copyright-footer p {
-                font-size: 12px;
-            }
-        }
+@media (max-width: 600px) {
+.copyright-footer p {
+font-size: 12px;
+}
+}
         
     </style>
 </head>
@@ -956,13 +957,13 @@
             let baselineNoise = 0;
             let isCalibrated = false;
 
-            // 修訂的音頻處理參數
-            const SMOOTHING_FACTOR = 0.3;
-            const NOISE_GATE_THRESHOLD = 0.001; // 降低噪音門檻
+            // 改進的音頻處理參數
+            const SMOOTHING_FACTOR = 0.2;
+            const NOISE_GATE_THRESHOLD = 0.005;
             const MIN_DB = 25;
             const MAX_DB = 100;
             const FREQUENCY_WEIGHTS = {
-                low: 0.8,
+                low: 0.7,
                 mid: 1.0,
                 high: 0.9
             };
@@ -970,9 +971,7 @@
             let currentDb = MIN_DB;
             let smoothedDb = MIN_DB;
             let calibrationSamples = [];
-            const CALIBRATION_DURATION = 2000; // 縮短校準時間
-            let lastValidReading = MIN_DB;
-            let consecutiveLowReadings = 0;
+            const CALIBRATION_DURATION = 3000;
 
             // 須留堂通知關閉函數
             window.dismissDetentionNotice = function() {
@@ -1246,10 +1245,10 @@
                 
                 analyser = audioContext.createAnalyser();
                 microphone = audioContext.createMediaStreamSource(stream);
-                javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+                javascriptNode = audioContext.createScriptProcessor(4096, 1, 1);
 
                 analyser.smoothingTimeConstant = 0.1;
-                analyser.fftSize = 4096;
+                analyser.fftSize = 8192;
                 analyser.minDecibels = -100;
                 analyser.maxDecibels = -10;
 
@@ -1280,7 +1279,7 @@
                             
                             if (calibrationSamples.length > 0) {
                                 calibrationSamples.sort((a, b) => a - b);
-                                baselineNoise = calibrationSamples[Math.floor(calibrationSamples.length * 0.15)];
+                                baselineNoise = calibrationSamples[Math.floor(calibrationSamples.length * 0.1)];
                                 isCalibrated = true;
                             }
                             
@@ -1294,10 +1293,11 @@
             function processAudioData() {
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
+                const freqArray = new Float32Array(bufferLength);
                 
                 analyser.getByteFrequencyData(dataArray);
+                analyser.getFloatFrequencyData(freqArray);
                 
-                // 計算加權RMS值
                 let weightedSum = 0;
                 let totalWeight = 0;
                 const binCount = bufferLength;
@@ -1322,41 +1322,24 @@
                 
                 const rms = Math.sqrt(weightedSum / totalWeight);
                 
-                // 修訂的處理邏輯
                 if (rms < NOISE_GATE_THRESHOLD) {
-                    consecutiveLowReadings++;
-                    // 更溫和的衰減，避免過快下降
-                    if (consecutiveLowReadings > 5) {
-                        currentDb = Math.max(MIN_DB, currentDb * 0.995);
-                    }
+                    currentDb = Math.max(MIN_DB, currentDb * 0.98);
                 } else {
-                    consecutiveLowReadings = 0;
+                    let rawDb = 20 * Math.log10(rms * microphoneSensitivity + 0.00001) + 100;
                     
-                    let rawDb = 20 * Math.log10(rms * microphoneSensitivity + 0.000001) + 94;
-                    
-                    // 應用偏移量
                     rawDb += decibelOffset;
                     
-                    // 應用基線校準
                     if (isCalibrated && baselineNoise > 0) {
-                        rawDb = Math.max(rawDb - (baselineNoise - MIN_DB), MIN_DB);
+                        rawDb = Math.max(rawDb - baselineNoise, MIN_DB);
                     }
                     
-                    // 限制範圍
                     rawDb = Math.max(MIN_DB, Math.min(MAX_DB, rawDb));
-                    
-                    // 平滑處理
                     currentDb = SMOOTHING_FACTOR * rawDb + (1 - SMOOTHING_FACTOR) * currentDb;
-                    lastValidReading = currentDb;
                     
-                    // 校準階段收集樣本
                     if (calibrationMode === 'auto' && !isCalibrated) {
                         calibrationSamples.push(rawDb);
                     }
                 }
-                
-                // 確保最小值
-                currentDb = Math.max(MIN_DB, currentDb);
                 
                 updateDbDisplay(currentDb);
                 
@@ -1416,8 +1399,6 @@
                 measurementStartTime = 0;
                 lastExceedanceTime = 0;
                 detentionNoticeShown = false;
-                lastValidReading = MIN_DB;
-                consecutiveLowReadings = 0;
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
@@ -1466,8 +1447,8 @@
     </script>
 
     <footer class="copyright-footer">
-        <p>Copyright © 2025 陳冠健. All rights reserved.</p>
-    </footer>
+<p>Copyright © 2025 陳冠健. All rights reserved.</p>
+</footer>
 
 </body>
-</html>
+    </html>
