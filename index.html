@@ -334,8 +334,7 @@ font-size: 1.1rem;
 font-weight: 500;
 }
 
-.form-group input[type="number"],
-.form-group input[type="range"] {
+.form-group input[type="number"] {
 width: 100%;
 padding: 16px;
 background-color: var(--bg-color);
@@ -383,12 +382,6 @@ margin-bottom: 20px;
 color: var(--accent-color);
 }
 
-.calibration-buttons {
-display: flex;
-gap: 15px;
-margin-bottom: 20px;
-}
-
 .calibration-btn {
 padding: 12px 20px;
 background-color: var(--bg-color);
@@ -399,7 +392,8 @@ font-size: 0.9rem;
 font-weight: 600;
 cursor: pointer;
 transition: all 0.2s;
-flex: 1;
+width: 100%;
+margin-bottom: 20px;
 }
 
 .calibration-btn:hover {
@@ -407,10 +401,13 @@ background-color: var(--accent-color);
 color: white;
 }
 
-.calibration-btn.active {
-background-color: var(--accent-color);
-color: white;
+.calibration-btn:disabled {
+border-color: var(--secondary-text-color);
+color: var(--secondary-text-color);
+cursor: not-allowed;
+background-color: transparent;
 }
+
 
 .calibration-info {
 background-color: var(--bg-color);
@@ -433,6 +430,7 @@ font-size: 1.2rem;
 font-weight: 600;
 cursor: pointer;
 transition: background-color 0.2s;
+margin-top: 20px;
 }
 
 #saveSettingsBtn:hover {
@@ -595,10 +593,6 @@ gap: 25px;
 .modal-content {
 padding: 30px 25px;
 margin: 20px;
-}
-
-.calibration-buttons {
-flex-direction: column;
 }
 
 .detention-content {
@@ -778,18 +772,18 @@ font-size: 12px;
 <div class="decibel-meter">
 <div class="display">
 <div class="current-db-display">
-<span id="currentDbValue">--</span><span>dB</span>
+<span id="currentDbValue">--</span><span id="dbUnit">dBA</span>
 </div>
 <div class="info-display with-exceedance" id="infoDisplay">
 <div class="info-box avg-highlight">
 <span id="avgDbValue" class="value">--</span>
 <span class="label">平均分貝</span>
-<span class="warning-value" id="avgWarningValue">53dB</span>
+<span class="warning-value" id="avgWarningValue">53dBA</span>
 </div>
 <div class="info-box exceedance-counter" id="exceedanceBox">
 <span id="exceedanceValue" class="value">0</span>
 <span class="label">次數</span>
-<span class="warning-value" id="exceedanceWarningValue">70dB</span>
+<span class="warning-value" id="exceedanceWarningValue">70dBA</span>
 <div class="exceedance-indicators" id="exceedanceIndicators">
 <div class="exceedance-dot"></div>
 <div class="exceedance-dot"></div>
@@ -828,11 +822,11 @@ font-size: 12px;
 <input type="number" id="durationInput" value="15" min="1">
 </div>
 <div class="form-group">
-<label for="thresholdInput">平均分貝警示值 (dB)</label>
+<label for="thresholdInput">平均分貝警示值 (dBA)</label>
 <input type="number" id="thresholdInput" value="53" min="0">
 </div>
 <div class="form-group">
-<label for="maxDbInput">單次最高分貝限制 (dB)</label>
+<label for="maxDbInput">單次最高分貝限制 (dBA)</label>
 <input type="number" id="maxDbInput" value="63" min="0">
 </div>
 <div class="form-group">
@@ -850,35 +844,21 @@ font-size: 12px;
 <div class="calibration-section">
 <div class="calibration-title">設備校準</div>
 <div class="calibration-info">
-為了提高測量準確度，請選擇校準模式。不同設備的麥克風靈敏度不同，校準可以減少設備間的差異。
+不同設備的麥克風靈敏度有差異。請在**安靜的環境**中進行自動校準，或手動調整偏移量，以確保測量準確。
 </div>
 
-<div class="form-group">
-<label>校準模式：</label>
-<div class="calibration-buttons">
-<button type="button" class="calibration-btn active" data-mode="auto" id="autoCalibBtn">自動校準</button>
-<button type="button" class="calibration-btn" data-mode="manual" id="manualCalibBtn">手動校準</button>
-</div>
-</div>
+<button type="button" class="calibration-btn" id="autoCalibBtn">開始自動校準</button>
 
 <div class="form-group" id="offsetGroup">
-<label for="offsetInput">分貝偏移量 (dB)</label>
-<input type="number" id="offsetInput" value="0" step="0.1" min="-50" max="50">
+<label for="offsetInput">校準偏移量 (dB)</label>
+<input type="number" id="offsetInput" value="100" step="0.1" min="0" max="150">
 <small style="display: block; margin-top: 8px; color: var(--secondary-text-color); font-size: 0.9rem;">
-正值增加測量值，負值減少測量值
-</small>
-</div>
-
-<div class="form-group" id="sensitivityGroup" style="display: none;">
-<label for="sensitivityInput">麥克風靈敏度調整</label>
-<input type="range" id="sensitivityInput" min="0.1" max="3.0" step="0.1" value="1.0">
-<small style="display: block; margin-top: 8px; color: var(--secondary-text-color); font-size: 0.9rem;">
-調整範圍：0.1 - 3.0 (當前: <span id="sensitivityValue">1.0</span>)
+此數值會被自動校準功能設定。您也可以手動微調。
 </small>
 </div>
 </div>
 
-<button id="saveSettingsBtn">儲存</button>
+<button id="saveSettingsBtn">儲存設定</button>
 </div>
 </div>
 
@@ -918,21 +898,18 @@ const maxDbInput = document.getElementById('maxDbInput');
 const maxExceedanceInput = document.getElementById('maxExceedanceInput');
 const showExceedanceBox = document.getElementById('showExceedanceBox');
 const offsetInput = document.getElementById('offsetInput');
-const sensitivityInput = document.getElementById('sensitivityInput');
-const sensitivityValue = document.getElementById('sensitivityValue');
 const autoCalibBtn = document.getElementById('autoCalibBtn');
-const manualCalibBtn = document.getElementById('manualCalibBtn');
-const offsetGroup = document.getElementById('offsetGroup');
-const sensitivityGroup = document.getElementById('sensitivityGroup');
 
 let audioContext;
 let analyser;
 let microphone;
 let javascriptNode;
 let micStream;
+let aWeightingFilter;
 
 let isRunning = false;
 let isPaused = false;
+let isCalibrating = false;
 let timerInterval;
 let secondsRemaining = 15 * 60; 
 let decibelThreshold = 53;
@@ -948,12 +925,11 @@ let sumOfDb = 0;
 let measurementStartTime = 0;
 let lastExceedanceTime = 0;
 
-let decibelOffset = 0;
-let microphoneSensitivity = 1.0;
+let calibrationOffset = 100.0; // Default offset, will be changed by calibration.
 
+// Constants for audio processing
 const SMOOTHING_FACTOR = 0.2;
-const NOISE_GATE_THRESHOLD = 0.0001;
-const MIN_DB = 25;
+const MIN_DB = 20;
 const MAX_DB = 120;
 
 let currentDb = MIN_DB;
@@ -962,6 +938,7 @@ window.dismissDetentionNotice = function() {
 detentionNoticeEl.style.display = 'none';
 };
 
+// --- Event Listeners ---
 playPauseBtn.addEventListener('click', toggleMeasurement);
 settingsBtn.addEventListener('click', () => settingsModal.style.display = 'flex');
 closeModalBtn.addEventListener('click', () => settingsModal.style.display = 'none');
@@ -971,22 +948,7 @@ settingsModal.style.display = 'none';
 }
 });
 
-autoCalibBtn.addEventListener('click', () => {
-autoCalibBtn.classList.add('active');
-manualCalibBtn.classList.remove('active');
-sensitivityGroup.style.display = 'none';
-});
-
-manualCalibBtn.addEventListener('click', () => {
-manualCalibBtn.classList.add('active');
-autoCalibBtn.classList.remove('active');
-sensitivityGroup.style.display = 'block';
-});
-
-sensitivityInput.addEventListener('input', (e) => {
-microphoneSensitivity = parseFloat(e.target.value);
-sensitivityValue.textContent = microphoneSensitivity.toFixed(1);
-});
+autoCalibBtn.addEventListener('click', runAutoCalibration);
 
 showExceedanceBox.addEventListener('change', (e) => {
 showExceedanceContainer = e.target.checked;
@@ -1015,8 +977,7 @@ decibelThreshold = parseInt(thresholdInput.value, 10) || 53;
 maxDecibelLimit = parseInt(maxDbInput.value, 10) || 70;
 maxExceedanceCount = parseInt(maxExceedanceInput.value, 10) || 3;
 showExceedanceContainer = showExceedanceBox.checked;
-decibelOffset = parseFloat(offsetInput.value) || 0;
-microphoneSensitivity = parseFloat(sensitivityInput.value) || 1.0;
+calibrationOffset = parseFloat(offsetInput.value) || 100.0;
 
 saveSettings();
 
@@ -1031,10 +992,10 @@ resetValues();
 }
 });
 
+// --- Settings Management ---
 function saveSettings() {
 const settings = {
-decibelOffset,
-microphoneSensitivity,
+calibrationOffset,
 decibelThreshold,
 maxDecibelLimit,
 maxExceedanceCount,
@@ -1049,16 +1010,13 @@ const saved = localStorage.getItem('decibelMeterSettings');
 if (saved) {
 try {
 const settings = JSON.parse(saved);
-decibelOffset = settings.decibelOffset || 0;
-microphoneSensitivity = settings.microphoneSensitivity || 1.0;
+calibrationOffset = settings.calibrationOffset || 100.0;
 decibelThreshold = settings.decibelThreshold || 53;
 maxDecibelLimit = settings.maxDecibelLimit || 63;
 maxExceedanceCount = settings.maxExceedanceCount || 3;
 showExceedanceContainer = settings.showExceedanceContainer !== false;
 
-offsetInput.value = decibelOffset;
-sensitivityInput.value = microphoneSensitivity;
-sensitivityValue.textContent = microphoneSensitivity.toFixed(1);
+offsetInput.value = calibrationOffset.toFixed(1);
 thresholdInput.value = decibelThreshold;
 maxDbInput.value = maxDecibelLimit;
 maxExceedanceInput.value = maxExceedanceCount;
@@ -1074,9 +1032,10 @@ console.warn('無法載入保存的設定:', e);
 }
 }
 
+// --- UI Update Functions ---
 function updateWarningValues() {
-avgWarningValueEl.textContent = `${decibelThreshold}dB`;
-exceedanceWarningValueEl.textContent = `${maxDecibelLimit}dB × ${maxExceedanceCount}次`;
+avgWarningValueEl.textContent = `${decibelThreshold}dBA`;
+exceedanceWarningValueEl.textContent = `${maxDecibelLimit}dBA × ${maxExceedanceCount}次`;
 }
 
 function updateExceedanceIndicators() {
@@ -1101,6 +1060,7 @@ exceedanceBoxEl.style.display = 'none';
 }
 }
 
+// --- Core Measurement Logic ---
 function toggleMeasurement() {
 if (!isRunning) {
 startMeasurement();
@@ -1110,6 +1070,7 @@ pauseMeasurement();
 }
 
 async function startMeasurement() {
+if (isCalibrating) return;
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 alert('您的瀏覽器不支援麥克風存取！');
 return;
@@ -1156,7 +1117,7 @@ if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destinat
 }
 }
 
-function stopMeasurement() {
+function stopMeasurement(showAlert = true) {
 isRunning = false;
 isPaused = false;
 playPauseBtn.classList.remove('playing');
@@ -1169,37 +1130,32 @@ document.body.classList.remove('warning-flash');
 if (micStream) {
 micStream.getTracks().forEach(track => track.stop());
 }
-if (microphone) microphone.disconnect();
-if (analyser) analyser.disconnect();
-if (javascriptNode) javascriptNode.disconnect();
 if(audioContext && audioContext.state !== 'closed') {
     audioContext.close().catch(console.error);
 }
 
+// Check for detention notice
 let shouldShowDetention = false;
 let detentionReason = '';
-
-if (currentExceedanceCount >= maxExceedanceCount) {
+if (showExceedanceContainer && currentExceedanceCount >= maxExceedanceCount) {
 shouldShowDetention = true;
-detentionReason = `超標次數已達限制（${currentExceedanceCount}次）`;
+detentionReason = `超標次數已達限制 (${currentExceedanceCount}次)`;
 }
 
-if (dbHistory.length > 0) {
-const avgDb = sumOfDb / dbHistory.length;
+const avgDb = dbHistory.length > 0 ? sumOfDb / dbHistory.length : 0;
 if (avgDb > decibelThreshold) {
 shouldShowDetention = true;
-if (detentionReason) {
-detentionReason += `，且平均分貝超標（${Math.round(avgDb)}dB）`;
-} else {
-detentionReason = `平均分貝超標（${Math.round(avgDb)}dB）`;
-}
-}
+detentionReason += (detentionReason ? '，且' : '') + `平均分貝超標 (${Math.round(avgDb)}dBA)`;
 }
 
 if (shouldShowDetention && !detentionNoticeShown) {
 detentionMessageEl.textContent = detentionReason;
 detentionNoticeEl.style.display = 'flex';
 detentionNoticeShown = true;
+}
+
+if (showAlert) {
+alert('時間到！');
 }
 }
 
@@ -1212,77 +1168,182 @@ javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
 analyser.smoothingTimeConstant = 0.8;
 analyser.fftSize = 2048;
 
-microphone.connect(analyser);
+// Create and insert the A-Weighting Filter
+aWeightingFilter = createAWeightingFilter(audioContext);
+microphone.connect(aWeightingFilter);
+aWeightingFilter.connect(analyser);
+
 analyser.connect(javascriptNode);
 javascriptNode.connect(audioContext.destination);
 
-javascriptNode.onaudioprocess = () => {
-if(isPaused) return;
-processAudioData();
-};
+javascriptNode.onaudioprocess = processAudioData;
 
 if (audioContext.state === 'suspended') {
 await audioContext.resume();
 }
 }
 
+// --- Audio Processing & Calculation ---
 function processAudioData() {
-    const bufferLength = analyser.fftSize;
-    const dataArray = new Float32Array(bufferLength);
-    analyser.getFloatTimeDomainData(dataArray);
+if(isPaused) return;
 
-    let sumOfSquares = 0.0;
-    for (let i = 0; i < bufferLength; i++) {
-        sumOfSquares += dataArray[i] * dataArray[i];
-    }
-    const rms = Math.sqrt(sumOfSquares / bufferLength);
+const bufferLength = analyser.fftSize;
+const dataArray = new Float32Array(bufferLength);
+analyser.getFloatTimeDomainData(dataArray);
 
-    if (rms < NOISE_GATE_THRESHOLD) {
-        currentDb = Math.max(MIN_DB, currentDb * 0.98);
-    } else {
-        // 標準公式將 RMS 轉換為分貝，並加上參考值以趨近真實聲壓級
-        let rawDb = 20 * Math.log10(rms * microphoneSensitivity) + 94;
-        
-        // 應用使用者設定的校準偏移量
-        rawDb += decibelOffset;
+let sumOfSquares = 0.0;
+for (let i = 0; i < bufferLength; i++) {
+sumOfSquares += dataArray[i] * dataArray[i];
+}
+const rms = Math.sqrt(sumOfSquares / bufferLength);
 
-        // 限制數值的上下限
-        rawDb = Math.max(MIN_DB, Math.min(MAX_DB, rawDb));
-        
-        // 平滑化處理，讓數值顯示更穩定
-        currentDb = SMOOTHING_FACTOR * rawDb + (1 - SMOOTHING_FACTOR) * currentDb;
-    }
-
-    updateDbDisplay(currentDb);
-
-    if (currentDb > maxDecibelLimit && showExceedanceContainer) {
-        const currentTime = Date.now();
-        const elapsedTime = currentTime - measurementStartTime;
-
-        if (elapsedTime > 5000) {
-            if (currentTime - lastExceedanceTime > 5000) {
-                currentExceedanceCount++;
-                lastExceedanceTime = currentTime;
-                exceedanceValueEl.textContent = currentExceedanceCount;
-                updateExceedanceIndicators();
-
-                if (currentExceedanceCount >= maxExceedanceCount && !detentionNoticeShown) {
-                    detentionNoticeShown = true;
-                    detentionMessageEl.textContent = '超標次數已達限制';
-                    detentionNoticeEl.style.display = 'flex';
-                }
-            }
-        }
-    }
-
-    dbHistory.push(currentDb);
-    sumOfDb += currentDb;
-
-    const avgDb = sumOfDb / dbHistory.length;
-    updateAvgDbDisplay(avgDb);
-    checkThreshold(avgDb);
+if (isCalibrating) {
+// During calibration, we just push the raw RMS value
+calibrationSamples.push(rms);
+return;
+}
+    
+let rawDb;
+if (rms > 0) {
+    // The new formula: 20*log10(RMS) + calibration offset
+    rawDb = 20 * Math.log10(rms) + calibrationOffset;
+} else {
+    rawDb = MIN_DB;
 }
 
+rawDb = Math.max(MIN_DB, Math.min(MAX_DB, rawDb));
+currentDb = SMOOTHING_FACTOR * rawDb + (1 - SMOOTHING_FACTOR) * currentDb;
+
+updateDbDisplay(currentDb);
+
+// Check for single exceedance
+if (showExceedanceContainer && currentDb > maxDecibelLimit) {
+const currentTime = Date.now();
+// Add a 5-second grace period at the start and a 5-second cooldown between exceedances
+if (currentTime - measurementStartTime > 5000 && currentTime - lastExceedanceTime > 5000) {
+currentExceedanceCount++;
+lastExceedanceTime = currentTime;
+exceedanceValueEl.textContent = currentExceedanceCount;
+updateExceedanceIndicators();
+
+if (currentExceedanceCount >= maxExceedanceCount && !detentionNoticeShown) {
+    detentionNoticeShown = true;
+    detentionMessageEl.textContent = '超標次數已達限制';
+    detentionNoticeEl.style.display = 'flex';
+}
+}
+}
+
+// Update average
+dbHistory.push(currentDb);
+sumOfDb += currentDb;
+const avgDb = sumOfDb / dbHistory.length;
+updateAvgDbDisplay(avgDb);
+checkThreshold(avgDb);
+}
+
+/**
+* Creates a series of Biquad filters to approximate an A-weighting curve.
+* @param {AudioContext} context The audio context.
+* @returns {AudioNode} The first node in the filter chain.
+*/
+function createAWeightingFilter(context) {
+    // A-weighting is approximated by a chain of filters.
+    // This is a common implementation based on the standard IEC/ANSI curves.
+    const filter1 = context.createBiquadFilter();
+    filter1.type = "highpass";
+    filter1.frequency.value = 20.6;
+    filter1.Q.value = 0.71;
+
+    const filter2 = context.createBiquadFilter();
+    filter2.type = "highpass";
+    filter2.frequency.value = 20.6;
+    filter2.Q.value = 0.71;
+
+    const filter3 = context.createBiquadFilter();
+    filter3.type = "lowpass";
+    filter3.frequency.value = 12200;
+    filter3.Q.value = 0.71;
+    
+    const filter4 = context.createBiquadFilter();
+    filter4.type = "peaking";
+    filter4.frequency.value = 550;
+    filter4.Q.value = 0.5;
+    filter4.gain.value = -1.5;
+
+    filter1.connect(filter2);
+    filter2.connect(filter3);
+    filter3.connect(filter4);
+
+    // The chain starts at filter1 and ends at filter4
+    // We can wrap it for clarity, but just returning filter4 as the end and connecting to it is fine.
+    // However, the `connect` method returns the destination, so we return the start.
+    return filter1;
+}
+
+// --- Calibration Logic ---
+let calibrationSamples = [];
+async function runAutoCalibration() {
+if(isRunning) {
+alert('請先停止目前的量測，再進行校準。');
+return;
+}
+
+isCalibrating = true;
+autoCalibBtn.disabled = true;
+autoCalibBtn.textContent = '校準中，請保持安靜...';
+
+try {
+micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+await setupAudioNodes(micStream);
+calibrationSamples = []; // Reset samples
+
+setTimeout(() => {
+isCalibrating = false;
+autoCalibBtn.disabled = false;
+autoCalibBtn.textContent = '開始自動校準';
+
+// Stop the calibration audio stream
+micStream.getTracks().forEach(track => track.stop());
+if(audioContext && audioContext.state !== 'closed') {
+    audioContext.close();
+}
+
+if (calibrationSamples.length === 0) {
+    alert('校準失敗，無法取得麥克風讀數。');
+    return;
+}
+
+// Calculate the average RMS from the collected samples
+const sumRms = calibrationSamples.reduce((sum, val) => sum + val, 0);
+const avgRms = sumRms / calibrationSamples.length;
+
+// Target dB for a quiet room (e.g., 30 dBA)
+const QUIET_DB_TARGET = 30.0;
+
+if (avgRms > 0) {
+    // Calculate the offset: offset = target_dB - 20*log10(avg_rms)
+    const newOffset = QUIET_DB_TARGET - (20 * Math.log10(avgRms));
+    calibrationOffset = parseFloat(newOffset.toFixed(1));
+    offsetInput.value = calibrationOffset;
+    alert(`校準完成！新的偏移量為 ${calibrationOffset} dB。請記得儲存設定。`);
+} else {
+    alert('校準失敗：背景噪音過低或麥克風無訊號。');
+}
+
+}, 3000); // Calibrate for 3 seconds
+
+} catch (err) {
+alert('無法存取麥克風以進行校準。');
+console.error('Calibration mic access error:', err);
+isCalibrating = false;
+autoCalibBtn.disabled = false;
+autoCalibBtn.textContent = '開始自動校準';
+}
+}
+
+
+// --- Timer and Reset ---
 function startTimer() {
 timerInterval = setInterval(() => {
 if (secondsRemaining > 0) {
@@ -1290,7 +1351,6 @@ secondsRemaining--;
 updateTimerDisplay();
 } else {
 stopMeasurement();
-alert('時間到！');
 }
 }, 1000);
 }
@@ -1323,8 +1383,7 @@ timerValueEl.textContent = `${minutes}:${seconds}`;
 }
 
 function updateDbDisplay(db) {
-const displayValue = Math.round(db);
-currentDbValueEl.textContent = displayValue;
+currentDbValueEl.textContent = Math.round(db);
 }
 
 function updateAvgDbDisplay(avg) {
@@ -1341,12 +1400,9 @@ document.body.classList.remove('warning-flash');
 }
 }
 
-// 初始化
+// --- Initialisation ---
 loadSettings();
 updateTimerDisplay();
-updateWarningValues();
-updateExceedanceIndicators();
-updateLayoutDisplay();
 });
 </script>
 
