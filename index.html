@@ -867,7 +867,7 @@
         <div class="detention-content">
             <div class="detention-icon">⚠️</div>
             <div class="detention-title">須留堂</div>
-            <div class="detention-message">超標次數已達限制</div>
+            <div class="detention-message" id="detentionMessage">超標次數已達限制</div>
             <button class="detention-dismiss" onclick="dismissDetentionNotice()">確認</button>
         </div>
     </div>
@@ -884,6 +884,7 @@
             const infoDisplayEl = document.getElementById('infoDisplay');
             const exceedanceBoxEl = document.getElementById('exceedanceBox');
             const detentionNoticeEl = document.getElementById('detentionNotice');
+            const detentionMessageEl = document.getElementById('detentionMessage');
             
             const playPauseBtn = document.getElementById('playPauseBtn');
             const settingsBtn = document.getElementById('settingsBtn');
@@ -918,14 +919,14 @@
             let maxExceedanceCount = 3;
             let currentExceedanceCount = 0;
             let showExceedanceContainer = true;
-            let detentionNoticeShown = false; // 新增變量來追蹤是否已顯示須留堂通知
+            let detentionNoticeShown = false;
 
             let dbHistory = [];
             let sumOfDb = 0;
 
             // 修訂的變量
-            let measurementStartTime = 0; // 記錄測量開始時間
-            let lastExceedanceTime = 0; // 記錄上次超標的時間
+            let measurementStartTime = 0;
+            let lastExceedanceTime = 0;
 
             // 校準和音頻處理參數
             let calibrationMode = 'auto';
@@ -1186,9 +1187,32 @@
                 if (javascriptNode) javascriptNode.disconnect();
                 if(audioContext && audioContext.state !== 'closed') audioContext.close();
                 
-                // 檢查是否超過限制次數
+                // 檢查是否超過限制次數或平均分貝超標
+                let shouldShowDetention = false;
+                let detentionReason = '';
+                
                 if (currentExceedanceCount >= maxExceedanceCount) {
-                    alert(`警告：已超過 ${maxDecibelLimit}dB 限制 ${currentExceedanceCount} 次！`);
+                    shouldShowDetention = true;
+                    detentionReason = `超標次數已達限制（${currentExceedanceCount}次）`;
+                }
+                
+                // 檢查平均分貝是否超過警示值
+                if (dbHistory.length > 0) {
+                    const avgDb = sumOfDb / dbHistory.length;
+                    if (avgDb > decibelThreshold) {
+                        shouldShowDetention = true;
+                        if (detentionReason) {
+                            detentionReason += `，且平均分貝超標（${Math.round(avgDb)}dB）`;
+                        } else {
+                            detentionReason = `平均分貝超標（${Math.round(avgDb)}dB）`;
+                        }
+                    }
+                }
+                
+                if (shouldShowDetention && !detentionNoticeShown) {
+                    detentionMessageEl.textContent = detentionReason;
+                    detentionNoticeEl.style.display = 'flex';
+                    detentionNoticeShown = true;
                 }
             }
 
@@ -1314,6 +1338,7 @@
                             // 檢查是否達到最後一盞燈（達到最大超標次數）
                             if (currentExceedanceCount >= maxExceedanceCount && !detentionNoticeShown) {
                                 detentionNoticeShown = true;
+                                detentionMessageEl.textContent = '超標次數已達限制';
                                 detentionNoticeEl.style.display = 'flex';
                             }
                         }
@@ -1351,7 +1376,7 @@
                 currentExceedanceCount = 0;
                 measurementStartTime = 0;
                 lastExceedanceTime = 0;
-                detentionNoticeShown = false; // 重置須留堂通知狀態
+                detentionNoticeShown = false;
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
@@ -1362,7 +1387,7 @@
                 exceedanceValueEl.textContent = '0';
                 updateExceedanceIndicators();
                 document.body.classList.remove('warning-flash');
-                detentionNoticeEl.style.display = 'none'; // 隱藏須留堂通知
+                detentionNoticeEl.style.display = 'none';
             }
             
             function updateTimerDisplay() {
