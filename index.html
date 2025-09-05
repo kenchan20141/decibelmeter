@@ -750,6 +750,27 @@
                 font-size: 5rem;
             }
         }
+
+.copyright-footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding: 5px 10px;
+    background-color: #f1f1f1 !important;
+    color: #000000 !important;
+}
+
+.copyright-footer p {
+    margin: 0 !important;
+    font-size: 14px !important;
+    color: #000000 !important;
+}
+
+@media (max-width: 600px) {
+.copyright-footer p {
+font-size: 12px;
+}
+}
         
     </style>
 </head>
@@ -1423,6 +1444,10 @@
             updateLayoutDisplay();
         });
     </script>
+
+    <footer class="copyright-footer">
+<p>Copyright © 2025 陳冠健. All rights reserved.</p>
+</footer>
 
 </body>
 </html>
