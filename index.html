@@ -791,7 +791,7 @@ font-size: 12px;
 <div class="info-box exceedance-counter" id="exceedanceBox">
 <span id="exceedanceValue" class="value">0</span>
 <span class="label">次數</span>
-<span class="warning-value" id="exceedanceWarningValue">70dB</span>
+<span class="warning-value" id="exceedanceWarningValue">63dB</span>
 <div class="exceedance-indicators" id="exceedanceIndicators">
 <div class="exceedance-dot"></div>
 <div class="exceedance-dot"></div>
@@ -934,6 +934,7 @@ let sumOfDb = 0;
 let measurementStartTime = 0;
 let lastExceedanceTime = 0;
 
+// **核心變更：引入分貝偏移量**
 let decibelOffset = 0;
 
 const SMOOTHING_FACTOR = 0.2;
@@ -982,9 +983,10 @@ saveSettingsBtn.addEventListener('click', () => {
 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
 secondsRemaining = durationInMinutes * 60;
 decibelThreshold = parseInt(thresholdInput.value, 10) || 53;
-maxDecibelLimit = parseInt(maxDbInput.value, 10) || 70;
+maxDecibelLimit = parseInt(maxDbInput.value, 10) || 63;
 maxExceedanceCount = parseInt(maxExceedanceInput.value, 10) || 3;
 showExceedanceContainer = showExceedanceBox.checked;
+// **核心變更：儲存偏移量**
 decibelOffset = parseFloat(offsetInput.value) || 0;
 
 saveSettings();
@@ -1002,6 +1004,7 @@ resetValues();
 
 function saveSettings() {
 const settings = {
+// **核心變更：將偏移量加入儲存**
 decibelOffset,
 decibelThreshold,
 maxDecibelLimit,
@@ -1017,6 +1020,7 @@ const saved = localStorage.getItem('decibelMeterSettings');
 if (saved) {
 try {
 const settings = JSON.parse(saved);
+// **核心變更：載入已儲存的偏移量**
 decibelOffset = settings.decibelOffset || 0;
 decibelThreshold = settings.decibelThreshold || 53;
 maxDecibelLimit = settings.maxDecibelLimit || 63;
@@ -1208,7 +1212,7 @@ function processAudioData() {
         // 標準公式將 RMS 轉換為分貝 (以 1 Pa = 94 dB SPL 為參考)
         let rawDb = 20 * Math.log10(rms) + 94;
         
-        // 應用使用者設定的校準偏移量
+        // **核心變更：應用使用者設定的校準偏移量**
         rawDb += decibelOffset;
 
         // 限制數值的上下限
