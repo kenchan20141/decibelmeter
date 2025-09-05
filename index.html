@@ -759,10 +759,6 @@
             let dbHistory = [];
             let sumOfDb = 0;
 
-            // 修訂的變量
-            let measurementStartTime = 0; // 記錄測量開始時間
-            let lastExceedanceTime = 0; // 記錄上次超標的時間
-
             // 校準和音頻處理參數
             let calibrationMode = 'auto';
             let decibelOffset = 0;
@@ -972,9 +968,6 @@
 
                     resetValues();
                     
-                    // 記錄測量開始時間
-                    measurementStartTime = Date.now();
-                    
                     // 執行校準
                     if (calibrationMode === 'auto' && !isCalibrated) {
                         await performAutoCalibration();
@@ -1128,20 +1121,13 @@
                 
                 updateDbDisplay(currentDb);
                 
-                // 修訂的超標檢測邏輯
+                // 檢查是否超過單次限制
                 if (currentDb > maxDecibelLimit && showExceedanceContainer) {
-                    const currentTime = Date.now();
-                    const elapsedTime = currentTime - measurementStartTime;
-                    
-                    // 頭五秒時間即使單次分貝值超標都不計算進超標次數
-                    if (elapsedTime > 5000) {
-                        // 五秒之後，檢查距離上次超標是否已經過了五秒
-                        if (currentTime - lastExceedanceTime > 5000) {
-                            currentExceedanceCount++;
-                            lastExceedanceTime = currentTime;
-                            exceedanceValueEl.textContent = currentExceedanceCount;
-                            updateExceedanceIndicators();
-                        }
+                    if (dbHistory.length === 0 || dbHistory[dbHistory.length - 1] <= maxDecibelLimit) {
+                        // 新的超過事件
+                        currentExceedanceCount++;
+                        exceedanceValueEl.textContent = currentExceedanceCount;
+                        updateExceedanceIndicators();
                     }
                 }
                 
@@ -1174,8 +1160,6 @@
                 calibrationSamples = [];
                 baselineNoise = 0;
                 currentExceedanceCount = 0;
-                measurementStartTime = 0;
-                lastExceedanceTime = 0;
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
