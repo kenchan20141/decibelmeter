@@ -440,6 +440,112 @@
             background-color: #2980b9;
         }
 
+        /* 須留堂通知樣式 */
+        .detention-notice {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.95), rgba(192, 57, 43, 0.95));
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            animation: noticeSlideIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .detention-content {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 60px 40px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .detention-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        .detention-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        .detention-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .detention-message {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .detention-dismiss {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .detention-dismiss:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes noticeSlideIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) rotateY(20deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .decibel-meter {
@@ -495,6 +601,19 @@
             .calibration-buttons {
                 flex-direction: column;
             }
+
+            .detention-content {
+                padding: 40px 30px;
+                max-width: 350px;
+            }
+
+            .detention-title {
+                font-size: 2rem;
+            }
+
+            .detention-icon {
+                font-size: 3rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -549,6 +668,18 @@
             .modal-header h2 {
                 font-size: 1.5rem;
             }
+
+            .detention-content {
+                padding: 30px 25px;
+            }
+
+            .detention-title {
+                font-size: 1.8rem;
+            }
+
+            .detention-message {
+                font-size: 1.1rem;
+            }
         }
 
         @media (max-width: 360px) {
@@ -567,6 +698,14 @@
 
             .info-box.avg-highlight .value {
                 font-size: 2.2rem;
+            }
+
+            .detention-content {
+                padding: 25px 20px;
+            }
+
+            .detention-title {
+                font-size: 1.6rem;
             }
         }
 
@@ -598,6 +737,19 @@
                 width: 56px;
                 height: 56px;
             }
+
+            .detention-content {
+                max-width: 480px;
+                padding: 70px 50px;
+            }
+
+            .detention-title {
+                font-size: 3rem;
+            }
+
+            .detention-icon {
+                font-size: 5rem;
+            }
         }
         
     </style>
@@ -618,7 +770,7 @@
                 <div class="info-box exceedance-counter" id="exceedanceBox">
                     <span id="exceedanceValue" class="value">0</span>
                     <span class="label">次數</span>
-                    <span class="warning-value" id="exceedanceWarningValue">70dB × 3次</span>
+                    <span class="warning-value" id="exceedanceWarningValue">70dB</span>
                     <div class="exceedance-indicators" id="exceedanceIndicators">
                         <div class="exceedance-dot"></div>
                         <div class="exceedance-dot"></div>
@@ -671,7 +823,7 @@
             <div class="form-group">
                 <div class="checkbox-group">
                     <input type="checkbox" id="showExceedanceBox" checked>
-                    <label for="showExceedanceBox">顯示單次分貝值超標警示容器</label>
+                    <label for="showExceedanceBox">啟用單次分貝值超標警示容器</label>
                 </div>
             </div>
 
@@ -711,6 +863,16 @@
         </div>
     </div>
 
+    <!-- 須留堂通知 -->
+    <div id="detentionNotice" class="detention-notice">
+        <div class="detention-content">
+            <div class="detention-icon">⚠️</div>
+            <div class="detention-title">須留堂</div>
+            <div class="detention-message" id="detentionMessage">超標次數已達限制</div>
+            <button class="detention-dismiss" onclick="dismissDetentionNotice()">確認</button>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const currentDbValueEl = document.getElementById('currentDbValue');
@@ -722,6 +884,8 @@
             const exceedanceIndicatorsEl = document.getElementById('exceedanceIndicators');
             const infoDisplayEl = document.getElementById('infoDisplay');
             const exceedanceBoxEl = document.getElementById('exceedanceBox');
+            const detentionNoticeEl = document.getElementById('detentionNotice');
+            const detentionMessageEl = document.getElementById('detentionMessage');
             
             const playPauseBtn = document.getElementById('playPauseBtn');
             const settingsBtn = document.getElementById('settingsBtn');
@@ -756,9 +920,14 @@
             let maxExceedanceCount = 3;
             let currentExceedanceCount = 0;
             let showExceedanceContainer = true;
+            let detentionNoticeShown = false;
 
             let dbHistory = [];
             let sumOfDb = 0;
+
+            // 修訂的變量
+            let measurementStartTime = 0;
+            let lastExceedanceTime = 0;
 
             // 校準和音頻處理參數
             let calibrationMode = 'auto';
@@ -782,6 +951,11 @@
             let smoothedDb = MIN_DB;
             let calibrationSamples = [];
             const CALIBRATION_DURATION = 3000;
+
+            // 須留堂通知關閉函數
+            window.dismissDetentionNotice = function() {
+                detentionNoticeEl.style.display = 'none';
+            };
 
             // --- UI Interaction ---
 
@@ -969,6 +1143,9 @@
 
                     resetValues();
                     
+                    // 記錄測量開始時間
+                    measurementStartTime = Date.now();
+                    
                     // 執行校準
                     if (calibrationMode === 'auto' && !isCalibrated) {
                         await performAutoCalibration();
@@ -1011,9 +1188,32 @@
                 if (javascriptNode) javascriptNode.disconnect();
                 if(audioContext && audioContext.state !== 'closed') audioContext.close();
                 
-                // 檢查是否超過限制次數
+                // 檢查是否超過限制次數或平均分貝超標
+                let shouldShowDetention = false;
+                let detentionReason = '';
+                
                 if (currentExceedanceCount >= maxExceedanceCount) {
-                    alert(`警告：已超過 ${maxDecibelLimit}dB 限制 ${currentExceedanceCount} 次！`);
+                    shouldShowDetention = true;
+                    detentionReason = `超標次數已達限制（${currentExceedanceCount}次）`;
+                }
+                
+                // 檢查平均分貝是否超過警示值
+                if (dbHistory.length > 0) {
+                    const avgDb = sumOfDb / dbHistory.length;
+                    if (avgDb > decibelThreshold) {
+                        shouldShowDetention = true;
+                        if (detentionReason) {
+                            detentionReason += `，且平均分貝超標（${Math.round(avgDb)}dB）`;
+                        } else {
+                            detentionReason = `平均分貝超標（${Math.round(avgDb)}dB）`;
+                        }
+                    }
+                }
+                
+                if (shouldShowDetention && !detentionNoticeShown) {
+                    detentionMessageEl.textContent = detentionReason;
+                    detentionNoticeEl.style.display = 'flex';
+                    detentionNoticeShown = true;
                 }
             }
 
@@ -1122,13 +1322,27 @@
                 
                 updateDbDisplay(currentDb);
                 
-                // 檢查是否超過單次限制
+                // 修訂的超標檢測邏輯
                 if (currentDb > maxDecibelLimit && showExceedanceContainer) {
-                    if (dbHistory.length === 0 || dbHistory[dbHistory.length - 1] <= maxDecibelLimit) {
-                        // 新的超過事件
-                        currentExceedanceCount++;
-                        exceedanceValueEl.textContent = currentExceedanceCount;
-                        updateExceedanceIndicators();
+                    const currentTime = Date.now();
+                    const elapsedTime = currentTime - measurementStartTime;
+                    
+                    // 頭五秒時間即使單次分貝值超標都不計算進超標次數
+                    if (elapsedTime > 5000) {
+                        // 五秒之後，檢查距離上次超標是否已經過了五秒
+                        if (currentTime - lastExceedanceTime > 5000) {
+                            currentExceedanceCount++;
+                            lastExceedanceTime = currentTime;
+                            exceedanceValueEl.textContent = currentExceedanceCount;
+                            updateExceedanceIndicators();
+                            
+                            // 檢查是否達到最後一盞燈（達到最大超標次數）
+                            if (currentExceedanceCount >= maxExceedanceCount && !detentionNoticeShown) {
+                                detentionNoticeShown = true;
+                                detentionMessageEl.textContent = '超標次數已達限制';
+                                detentionNoticeEl.style.display = 'flex';
+                            }
+                        }
                     }
                 }
                 
@@ -1161,6 +1375,9 @@
                 calibrationSamples = [];
                 baselineNoise = 0;
                 currentExceedanceCount = 0;
+                measurementStartTime = 0;
+                lastExceedanceTime = 0;
+                detentionNoticeShown = false;
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
@@ -1171,6 +1388,7 @@
                 exceedanceValueEl.textContent = '0';
                 updateExceedanceIndicators();
                 document.body.classList.remove('warning-flash');
+                detentionNoticeEl.style.display = 'none';
             }
             
             function updateTimerDisplay() {
@@ -1208,4 +1426,4 @@
     </script>
 
 </body>
-                    </html>
+    </html>
