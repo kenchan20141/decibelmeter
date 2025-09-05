@@ -15,8 +15,6 @@
             --warning-color: #e74c3c;
             --modal-bg: #34495e;
             --accent-color: #3498db;
-            --exceedance-bg: #2a2a3e;
-            --exceedance-border: #4a4a6e;
         }
 
         * {
@@ -65,28 +63,20 @@
         }
         
         .info-display {
-            display: grid;
-            gap: 20px;
+            display: flex;
+            justify-content: space-around;
             margin-top: 30px;
-            margin-bottom: 20px;
-        }
-
-        .info-display.with-exceedance {
-            grid-template-columns: 70% 30%;
-        }
-
-        .info-display.without-exceedance {
-            grid-template-columns: 100%;
+            gap: 20px;
         }
         
         .info-box {
             display: flex;
             flex-direction: column;
-            padding: 25px;
+            flex: 1;
+            padding: 20px;
             background-color: var(--bg-color);
             border-radius: 16px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
         }
 
         .info-box:hover {
@@ -98,15 +88,6 @@
             background: linear-gradient(135deg, var(--accent-color), #2980b9);
             transform: scale(1.05);
             box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
-        }
-
-        .info-box.exceedance-counter {
-            background-color: var(--exceedance-bg);
-            border: 2px solid var(--exceedance-border);
-        }
-
-        .info-box.exceedance-counter:hover {
-            background-color: #323248;
         }
         
         .info-box .value {
@@ -133,74 +114,6 @@
         .info-box.avg-highlight .label {
             color: #e8f4fd;
             font-weight: 600;
-        }
-
-        .warning-value {
-    position: absolute;
-    bottom: 8px;
-    right: 12px;
-    font-size: 0.85rem;
-    color: #ff6b6b ;
-    opacity: 0.8;    /* 調整透明度 */
-}
-
-        .info-box.avg-highlight .warning-value {
-            color: #e8f4fd;
-        }
-
-        .exceedance-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-            margin-bottom: 8px;
-        }
-
-        .exceedance-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: var(--secondary-text-color);
-            opacity: 0.3;
-            transition: all 0.3s ease;
-        }
-
-        .exceedance-dot.exceeded {
-            background-color: var(--warning-color);
-            opacity: 1;
-            box-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
-        }
-
-        .timer-section {
-            margin-top: 20px;
-        }
-
-        .timer-box {
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-            background-color: var(--bg-color);
-            border-radius: 16px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .timer-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .timer-box .value {
-            font-size: 3rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .timer-box .label {
-            font-size: 1rem;
-            color: var(--secondary-text-color);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
         }
 
         .controls {
@@ -334,8 +247,7 @@
             font-weight: 500;
         }
 
-        .form-group input[type="number"],
-        .form-group input[type="range"] {
+        .form-group input {
             width: 100%;
             padding: 16px;
             background-color: var(--bg-color);
@@ -344,24 +256,6 @@
             color: var(--primary-text-color);
             font-size: 1.2rem;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .form-group input[type="checkbox"] {
-            width: auto;
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-top: 15px;
-        }
-
-        .checkbox-group label {
-            margin-bottom: 0;
-            margin-left: 10px;
-            cursor: pointer;
         }
 
         .form-group input:focus {
@@ -455,8 +349,7 @@
                 font-size: 2rem;
             }
 
-            .info-display.with-exceedance {
-                grid-template-columns: 1fr;
+            .info-display {
                 gap: 15px;
             }
 
@@ -468,12 +361,7 @@
                 font-size: 2.8rem;
             }
 
-            .timer-box .value {
-                font-size: 2.5rem;
-            }
-
-            .info-box .label,
-            .timer-box .label {
+            .info-box .label {
                 font-size: 0.9rem;
             }
 
@@ -513,13 +401,16 @@
                 font-size: 1.8rem;
             }
 
-            .info-box,
-            .timer-box {
-                padding: 20px;
+            .info-display {
+                flex-direction: column;
+                gap: 15px;
             }
 
-            .info-box .value,
-            .timer-box .value {
+            .info-box {
+                padding: 15px;
+            }
+
+            .info-box .value {
                 font-size: 2.2rem;
             }
 
@@ -559,8 +450,7 @@
                 font-size: 1.5rem;
             }
 
-            .info-box .value,
-            .timer-box .value {
+            .info-box .value {
                 font-size: 2rem;
             }
 
@@ -584,8 +474,7 @@
                 font-size: 3rem;
             }
 
-            .info-box .value,
-            .timer-box .value {
+            .info-box .value {
                 font-size: 3.5rem;
             }
 
@@ -608,25 +497,12 @@
             <div class="current-db-display">
                 <span id="currentDbValue">--</span><span>dB</span>
             </div>
-            <div class="info-display with-exceedance" id="infoDisplay">
+            <div class="info-display">
                 <div class="info-box avg-highlight">
                     <span id="avgDbValue" class="value">--</span>
                     <span class="label">平均分貝</span>
-                    <span class="warning-value" id="avgWarningValue">53dB</span>
                 </div>
-                <div class="info-box exceedance-counter" id="exceedanceBox">
-                    <span id="exceedanceValue" class="value">0</span>
-                    <span class="label">次數</span>
-                    <span class="warning-value" id="exceedanceWarningValue">70dB</span>
-                    <div class="exceedance-indicators" id="exceedanceIndicators">
-                        <div class="exceedance-dot"></div>
-                        <div class="exceedance-dot"></div>
-                        <div class="exceedance-dot"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="timer-section">
-                <div class="timer-box">
+                <div class="info-box">
                     <span id="timerValue" class="value">15:00</span>
                     <span class="label">剩餘時間</span>
                 </div>
@@ -658,20 +534,6 @@
             <div class="form-group">
                 <label for="thresholdInput">平均分貝警示值 (dB)</label>
                 <input type="number" id="thresholdInput" value="53" min="0">
-            </div>
-            <div class="form-group">
-                <label for="maxDbInput">單次最高分貝限制 (dB)</label>
-                <input type="number" id="maxDbInput" value="70" min="0">
-            </div>
-            <div class="form-group">
-                <label for="maxExceedanceInput">允許超過次數</label>
-                <input type="number" id="maxExceedanceInput" value="3" min="1" max="10">
-            </div>
-            <div class="form-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="showExceedanceBox" checked>
-                    <label for="showExceedanceBox">顯示單次分貝值超標警示容器</label>
-                </div>
             </div>
 
             <!-- 校準設定 -->
@@ -715,24 +577,13 @@
             const currentDbValueEl = document.getElementById('currentDbValue');
             const avgDbValueEl = document.getElementById('avgDbValue');
             const timerValueEl = document.getElementById('timerValue');
-            const exceedanceValueEl = document.getElementById('exceedanceValue');
-            const avgWarningValueEl = document.getElementById('avgWarningValue');
-            const exceedanceWarningValueEl = document.getElementById('exceedanceWarningValue');
-            const exceedanceIndicatorsEl = document.getElementById('exceedanceIndicators');
-            const infoDisplayEl = document.getElementById('infoDisplay');
-            const exceedanceBoxEl = document.getElementById('exceedanceBox');
-            
             const playPauseBtn = document.getElementById('playPauseBtn');
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsModal = document.getElementById('settingsModal');
             const closeModalBtn = document.querySelector('.close-btn');
             const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-            
             const durationInput = document.getElementById('durationInput');
             const thresholdInput = document.getElementById('thresholdInput');
-            const maxDbInput = document.getElementById('maxDbInput');
-            const maxExceedanceInput = document.getElementById('maxExceedanceInput');
-            const showExceedanceBox = document.getElementById('showExceedanceBox');
             const offsetInput = document.getElementById('offsetInput');
             const sensitivityInput = document.getElementById('sensitivityInput');
             const sensitivityValue = document.getElementById('sensitivityValue');
@@ -751,16 +602,12 @@
             let timerInterval;
             let secondsRemaining = 15 * 60; 
             let decibelThreshold = 53;
-            let maxDecibelLimit = 70;
-            let maxExceedanceCount = 3;
-            let currentExceedanceCount = 0;
-            let showExceedanceContainer = true;
 
             let dbHistory = [];
             let sumOfDb = 0;
 
             // 校準和音頻處理參數
-            let calibrationMode = 'auto';
+            let calibrationMode = 'auto'; // 'auto' or 'manual'
             let decibelOffset = 0;
             let microphoneSensitivity = 1.0;
             let baselineNoise = 0;
@@ -772,15 +619,16 @@
             const MIN_DB = 25;
             const MAX_DB = 100;
             const FREQUENCY_WEIGHTS = {
-                low: 0.7,
-                mid: 1.0,
-                high: 0.9
+                // A-weighting approximation for different frequency ranges
+                low: 0.7,    // 低頻衰減
+                mid: 1.0,    // 中頻正常
+                high: 0.9    // 高頻略微衰減
             };
             
             let currentDb = MIN_DB;
             let smoothedDb = MIN_DB;
             let calibrationSamples = [];
-            const CALIBRATION_DURATION = 3000;
+            const CALIBRATION_DURATION = 3000; // 3秒校準時間
 
             // --- UI Interaction ---
 
@@ -816,59 +664,30 @@
                 sensitivityValue.textContent = microphoneSensitivity.toFixed(1);
             });
 
-            // 顯示/隱藏超過次數容器
-            showExceedanceBox.addEventListener('change', (e) => {
-                showExceedanceContainer = e.target.checked;
-                updateLayoutDisplay();
-            });
-
-            // 更新超過次數指示器
-            maxExceedanceInput.addEventListener('input', () => {
-                updateExceedanceIndicators();
-                updateWarningValues();
-            });
-
-            thresholdInput.addEventListener('input', updateWarningValues);
-            maxDbInput.addEventListener('input', updateWarningValues);
-
             saveSettingsBtn.addEventListener('click', () => {
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
-                decibelThreshold = parseInt(thresholdInput.value, 10) || 53;
-                maxDecibelLimit = parseInt(maxDbInput.value, 10) || 70;
-                maxExceedanceCount = parseInt(maxExceedanceInput.value, 10) || 3;
-                showExceedanceContainer = showExceedanceBox.checked;
+                decibelThreshold = parseInt(thresholdInput.value, 10) || 70;
                 decibelOffset = parseFloat(offsetInput.value) || 0;
                 
-                // 保存設定到localStorage
-                saveSettings();
-                
-                updateTimerDisplay();
-                updateWarningValues();
-                updateExceedanceIndicators();
-                updateLayoutDisplay();
-                settingsModal.style.display = 'none';
-                
-                if (!isRunning) {
-                    resetValues();
-                }
-            });
-
-            // 載入和保存設定
-            function saveSettings() {
-                const settings = {
+                // 保存校準設定到localStorage
+                localStorage.setItem('decibelMeterSettings', JSON.stringify({
                     calibrationMode,
                     decibelOffset,
                     microphoneSensitivity,
                     decibelThreshold,
-                    maxDecibelLimit,
-                    maxExceedanceCount,
-                    showExceedanceContainer,
-                    duration: parseInt(durationInput.value, 10) || 15
-                };
-                localStorage.setItem('decibelMeterSettings', JSON.stringify(settings));
-            }
+                    duration: durationInMinutes
+                }));
+                
+                updateTimerDisplay();
+                settingsModal.style.display = 'none';
+                
+                if (!isRunning) {
+                     resetValues();
+                }
+            });
 
+            // 載入保存的設定
             function loadSettings() {
                 const saved = localStorage.getItem('decibelMeterSettings');
                 if (saved) {
@@ -878,59 +697,20 @@
                         decibelOffset = settings.decibelOffset || 0;
                         microphoneSensitivity = settings.microphoneSensitivity || 1.0;
                         decibelThreshold = settings.decibelThreshold || 53;
-                        maxDecibelLimit = settings.maxDecibelLimit || 70;
-                        maxExceedanceCount = settings.maxExceedanceCount || 3;
-                        showExceedanceContainer = settings.showExceedanceContainer !== false;
                         
                         // 更新UI
                         offsetInput.value = decibelOffset;
                         sensitivityInput.value = microphoneSensitivity;
                         sensitivityValue.textContent = microphoneSensitivity.toFixed(1);
                         thresholdInput.value = decibelThreshold;
-                        maxDbInput.value = maxDecibelLimit;
-                        maxExceedanceInput.value = maxExceedanceCount;
-                        showExceedanceBox.checked = showExceedanceContainer;
                         durationInput.value = settings.duration || 15;
                         
                         if (calibrationMode === 'manual') {
                             manualCalibBtn.click();
                         }
-                        
-                        updateWarningValues();
-                        updateExceedanceIndicators();
-                        updateLayoutDisplay();
                     } catch (e) {
                         console.warn('無法載入保存的設定:', e);
                     }
-                }
-            }
-
-            function updateWarningValues() {
-                avgWarningValueEl.textContent = `${decibelThreshold}dB`;
-                exceedanceWarningValueEl.textContent = `${maxDecibelLimit}dB × ${maxExceedanceCount}次`;
-            }
-
-            function updateExceedanceIndicators() {
-                const indicators = exceedanceIndicatorsEl;
-                indicators.innerHTML = '';
-                
-                for (let i = 0; i < maxExceedanceCount; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'exceedance-dot';
-                    if (i < currentExceedanceCount) {
-                        dot.classList.add('exceeded');
-                    }
-                    indicators.appendChild(dot);
-                }
-            }
-
-            function updateLayoutDisplay() {
-                if (showExceedanceContainer) {
-                    infoDisplayEl.className = 'info-display with-exceedance';
-                    exceedanceBoxEl.style.display = 'flex';
-                } else {
-                    infoDisplayEl.className = 'info-display without-exceedance';
-                    exceedanceBoxEl.style.display = 'none';
                 }
             }
 
@@ -991,7 +771,7 @@
                     playPauseBtn.classList.add('playing');
                     playPauseBtn.title = '暫停';
                     startTimer();
-                    if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destination);
+                     if (javascriptNode && audioContext) javascriptNode.connect(audioContext.destination);
                 }
             }
             
@@ -1009,11 +789,6 @@
                 if (analyser) analyser.disconnect();
                 if (javascriptNode) javascriptNode.disconnect();
                 if(audioContext && audioContext.state !== 'closed') audioContext.close();
-                
-                // 檢查是否超過限制次數
-                if (currentExceedanceCount >= maxExceedanceCount) {
-                    alert(`警告：已超過 ${maxDecibelLimit}dB 限制 ${currentExceedanceCount} 次！`);
-                }
             }
 
             async function setupAudioNodes(stream) {
@@ -1025,8 +800,9 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 javascriptNode = audioContext.createScriptProcessor(4096, 1, 1);
 
+                // 優化分析器設定
                 analyser.smoothingTimeConstant = 0.1;
-                analyser.fftSize = 8192;
+                analyser.fftSize = 8192; // 更高的分辨率
                 analyser.minDecibels = -100;
                 analyser.maxDecibels = -10;
 
@@ -1039,6 +815,7 @@
                     processAudioData();
                 };
 
+                // 確保音頻上下文啟動
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
@@ -1048,6 +825,7 @@
                 calibrationSamples = [];
                 let calibrationStartTime = Date.now();
                 
+                // 顯示校準進度（可選）
                 currentDbValueEl.textContent = 'CAL';
                 
                 return new Promise((resolve) => {
@@ -1055,9 +833,10 @@
                         if (Date.now() - calibrationStartTime >= CALIBRATION_DURATION) {
                             clearInterval(calibrationInterval);
                             
+                            // 計算基線噪音
                             if (calibrationSamples.length > 0) {
                                 calibrationSamples.sort((a, b) => a - b);
-                                baselineNoise = calibrationSamples[Math.floor(calibrationSamples.length * 0.1)];
+                                baselineNoise = calibrationSamples[Math.floor(calibrationSamples.length * 0.1)]; // 使用第10百分位
                                 isCalibrated = true;
                             }
                             
@@ -1076,15 +855,17 @@
                 analyser.getByteFrequencyData(dataArray);
                 analyser.getFloatFrequencyData(freqArray);
                 
+                // 計算加權RMS值
                 let weightedSum = 0;
                 let totalWeight = 0;
                 const binCount = bufferLength;
                 const nyquist = audioContext.sampleRate / 2;
                 
-                for (let i = 1; i < binCount; i++) {
+                for (let i = 1; i < binCount; i++) { // 跳過DC分量
                     const frequency = (i * nyquist) / binCount;
                     const magnitude = dataArray[i] / 255.0;
                     
+                    // 應用頻率加權
                     let weight = 1.0;
                     if (frequency < 1000) {
                         weight = FREQUENCY_WEIGHTS.low;
@@ -1100,20 +881,28 @@
                 
                 const rms = Math.sqrt(weightedSum / totalWeight);
                 
+                // 噪音門檻處理
                 if (rms < NOISE_GATE_THRESHOLD) {
-                    currentDb = Math.max(MIN_DB, currentDb * 0.98);
+                    currentDb = Math.max(MIN_DB, currentDb * 0.98); // 緩慢衰減
                 } else {
+                    // 計算分貝值
                     let rawDb = 20 * Math.log10(rms * microphoneSensitivity + 0.00001) + 100;
                     
+                    // 應用校準偏移
                     rawDb += decibelOffset;
                     
+                    // 減去基線噪音（如果已校準）
                     if (isCalibrated && baselineNoise > 0) {
                         rawDb = Math.max(rawDb - baselineNoise, MIN_DB);
                     }
                     
+                    // 限制範圍
                     rawDb = Math.max(MIN_DB, Math.min(MAX_DB, rawDb));
+                    
+                    // 平滑處理
                     currentDb = SMOOTHING_FACTOR * rawDb + (1 - SMOOTHING_FACTOR) * currentDb;
                     
+                    // 校準期間收集樣本
                     if (calibrationMode === 'auto' && !isCalibrated) {
                         calibrationSamples.push(rawDb);
                     }
@@ -1121,16 +910,7 @@
                 
                 updateDbDisplay(currentDb);
                 
-                // 檢查是否超過單次限制
-                if (currentDb > maxDecibelLimit && showExceedanceContainer) {
-                    if (dbHistory.length === 0 || dbHistory[dbHistory.length - 1] <= maxDecibelLimit) {
-                        // 新的超過事件
-                        currentExceedanceCount++;
-                        exceedanceValueEl.textContent = currentExceedanceCount;
-                        updateExceedanceIndicators();
-                    }
-                }
-                
+                // 記錄到歷史
                 dbHistory.push(currentDb);
                 sumOfDb += currentDb;
 
@@ -1159,7 +939,6 @@
                 isCalibrated = false;
                 calibrationSamples = [];
                 baselineNoise = 0;
-                currentExceedanceCount = 0;
                 
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
@@ -1167,8 +946,6 @@
                 updateTimerDisplay();
                 currentDbValueEl.textContent = '--';
                 avgDbValueEl.textContent = '--';
-                exceedanceValueEl.textContent = '0';
-                updateExceedanceIndicators();
                 document.body.classList.remove('warning-flash');
             }
             
@@ -1200,9 +977,6 @@
             // 初始化
             loadSettings();
             updateTimerDisplay();
-            updateWarningValues();
-            updateExceedanceIndicators();
-            updateLayoutDisplay();
         });
     </script>
 
