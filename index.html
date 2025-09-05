@@ -1027,6 +1027,19 @@ maxDecibelLimit = settings.maxDecibelLimit || 63;
 maxExceedanceCount = settings.maxExceedanceCount || 3;
 showExceedanceContainer = settings.showExceedanceContainer !== false;
 
+    // **👇 這是修訂的核心部分 👇**
+
+            // 1. 從儲存的設定中讀取倒數時間（分鐘），若無則預設為 15
+            const savedDuration = settings.duration || 15;
+            
+            // 2. 【關鍵】更新控制主頁面倒數計時的 `secondsRemaining` 變數
+            secondsRemaining = savedDuration * 60;
+            
+            // 3. 更新設定彈窗中的輸入框，確保兩者同步
+            durationInput.value = savedDuration;
+
+            // **👆 修訂核心部分結束 👆**
+
 offsetInput.value = decibelOffset;
 thresholdInput.value = decibelThreshold;
 maxDbInput.value = maxDecibelLimit;
