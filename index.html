@@ -508,8 +508,14 @@
             let dbHistory = [];
             let sumOfDb = 0;
 
-            const SMOOTHING_FACTOR = 0.8;
-            let smoothedDb = 0;
+            // 修訂的衰減參數
+            let currentDb = 20; // 初始底噪值
+            let lastValidDb = currentDb;
+            const DECAY_RATE = 0.998; // 衰減率 (每次處理減少0.2%)
+            const MIN_DB = 20; // 最小分貝值
+            const MAX_DB = 120; // 最大分貝值
+            const NOISE_FLOOR = 20; // 底噪基準
+            const SMOOTHING_FACTOR = 0.7; // 平滑因子
 
             // --- UI Interaction ---
 
@@ -550,7 +556,15 @@
                 }
 
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // 禁用音頻處理功能
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: false,  // 禁用回音消除
+                            noiseSuppression: false,  // 禁用噪音抑制
+                            autoGainControl: false,   // 禁用自動增益控制
+                            sampleRate: 44100        // 設定採樣率
+                        }
+                    });
                     setupAudioNodes(stream);
                     
                     isRunning = true;
@@ -604,8 +618,9 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
 
-                analyser.smoothingTimeConstant = 0.8;
-                analyser.fftSize = 1024;
+                // 修訂的分析器設定
+                analyser.smoothingTimeConstant = 0.3; // 降低平滑以提高響應性
+                analyser.fftSize = 2048; // 增加FFT大小以提高精度
 
                 microphone.connect(analyser);
                 analyser.connect(javascriptNode);
@@ -616,26 +631,51 @@
 
                     const array = new Uint8Array(analyser.frequencyBinCount);
                     analyser.getByteFrequencyData(array);
-                    let values = 0;
-                    const length = array.length;
-                    for (let i = 0; i < length; i++) {
-                        values += (array[i] * array[i]);
+                    
+                    // 改善的音量計算
+                    let sum = 0;
+                    let validSamples = 0;
+                    for (let i = 0; i < array.length; i++) {
+                        if (array[i] > 0) {
+                            sum += array[i] * array[i];
+                            validSamples++;
+                        }
                     }
-                    const volume = Math.sqrt(values / length);
                     
-                    const decibel = 20 * Math.log10(volume) + 50; 
-                    const validDb = isFinite(decibel) && decibel > 0 ? decibel : 0;
+                    if (validSamples > 0) {
+                        const rms = Math.sqrt(sum / validSamples);
+                        // 修訂的分貝計算公式
+                        let calculatedDb = 20 * Math.log10(rms / 255) + 100;
+                        
+                        // 限制分貝範圍
+                        calculatedDb = Math.max(MIN_DB, Math.min(MAX_DB, calculatedDb));
+                        
+                        if (isFinite(calculatedDb) && calculatedDb > NOISE_FLOOR) {
+                            // 有效音頻輸入時更新當前值
+                            currentDb = SMOOTHING_FACTOR * currentDb + (1 - SMOOTHING_FACTOR) * calculatedDb;
+                            lastValidDb = currentDb;
+                        } else {
+                            // 無有效輸入時緩慢衰減
+                            currentDb = Math.max(NOISE_FLOOR, currentDb * DECAY_RATE);
+                        }
+                    } else {
+                        // 完全無輸入時緩慢衰減
+                        currentDb = Math.max(NOISE_FLOOR, currentDb * DECAY_RATE);
+                    }
                     
-                    smoothedDb = SMOOTHING_FACTOR * smoothedDb + (1 - SMOOTHING_FACTOR) * validDb;
-                    updateDbDisplay(smoothedDb);
+                    updateDbDisplay(currentDb);
                     
-                    dbHistory.push(smoothedDb);
-                    sumOfDb += smoothedDb;
+                    // 只有在有效讀數時才加入歷史記錄
+                    if (currentDb > NOISE_FLOOR + 5) { // 略高於底噪才計入平均
+                        dbHistory.push(currentDb);
+                        sumOfDb += currentDb;
+                    }
 
-                    const avgDb = sumOfDb / dbHistory.length;
-                    updateAvgDbDisplay(avgDb);
-
-                    checkThreshold(avgDb);
+                    if (dbHistory.length > 0) {
+                        const avgDb = sumOfDb / dbHistory.length;
+                        updateAvgDbDisplay(avgDb);
+                        checkThreshold(avgDb);
+                    }
                 };
             }
 
@@ -654,6 +694,8 @@
             function resetValues() {
                 dbHistory = [];
                 sumOfDb = 0;
+                currentDb = NOISE_FLOOR;
+                lastValidDb = currentDb;
                 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
                 secondsRemaining = durationInMinutes * 60;
                 
