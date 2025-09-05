@@ -1141,6 +1141,11 @@
                             lastExceedanceTime = currentTime;
                             exceedanceValueEl.textContent = currentExceedanceCount;
                             updateExceedanceIndicators();
+                            
+                            // 只有達到最大超標次數時才彈出通知
+                            if (currentExceedanceCount >= maxExceedanceCount) {
+                                alert('須留堂');
+                            }
                         }
                     }
                 }
