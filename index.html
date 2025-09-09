@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -786,12 +787,12 @@ font-size: 12px;
 <div class="info-box avg-highlight">
 <span id="avgDbValue" class="value">--</span>
 <span class="label">平均分貝</span>
-<span class="warning-value" id="avgWarningValue">53dB</span>
+<span class="warning-value" id="avgWarningValue">40dB</span>
 </div>
 <div class="info-box exceedance-counter" id="exceedanceBox">
 <span id="exceedanceValue" class="value">0</span>
 <span class="label">次數</span>
-<span class="warning-value" id="exceedanceWarningValue">63dB</span>
+<span class="warning-value" id="exceedanceWarningValue">47dB</span>
 <div class="exceedance-indicators" id="exceedanceIndicators">
 <div class="exceedance-dot"></div>
 <div class="exceedance-dot"></div>
@@ -831,11 +832,11 @@ font-size: 12px;
 </div>
 <div class="form-group">
 <label for="thresholdInput">平均分貝警示值 (dB)</label>
-<input type="number" id="thresholdInput" value="53" min="0">
+<input type="number" id="thresholdInput" value="40" min="0">
 </div>
 <div class="form-group">
 <label for="maxDbInput">單次最高分貝限制 (dB)</label>
-<input type="number" id="maxDbInput" value="63" min="0">
+<input type="number" id="maxDbInput" value="47" min="0">
 </div>
 <div class="form-group">
 <label for="maxExceedanceInput">允許超過次數</label>
@@ -921,8 +922,8 @@ let isRunning = false;
 let isPaused = false;
 let timerInterval;
 let secondsRemaining = 15 * 60; 
-let decibelThreshold = 53;
-let maxDecibelLimit = 63;
+let decibelThreshold = 40;
+let maxDecibelLimit = 47;
 let maxExceedanceCount = 3;
 let currentExceedanceCount = 0;
 let showExceedanceContainer = true;
@@ -971,19 +972,19 @@ updateWarningValues();
 });
 
 thresholdInput.addEventListener('input', () => {
-    decibelThreshold = parseInt(thresholdInput.value, 10) || 53;
+    decibelThreshold = parseInt(thresholdInput.value, 10) || 40;
     updateWarningValues();
 });
 maxDbInput.addEventListener('input', () => {
-    maxDecibelLimit = parseInt(maxDbInput.value, 10) || 63;
+    maxDecibelLimit = parseInt(maxDbInput.value, 10) || 47;
     updateWarningValues();
 });
 
 saveSettingsBtn.addEventListener('click', () => {
 const durationInMinutes = parseInt(durationInput.value, 10) || 15;
 secondsRemaining = durationInMinutes * 60;
-decibelThreshold = parseInt(thresholdInput.value, 10) || 53;
-maxDecibelLimit = parseInt(maxDbInput.value, 10) || 63;
+decibelThreshold = parseInt(thresholdInput.value, 10) || 40;
+maxDecibelLimit = parseInt(maxDbInput.value, 10) || 47;
 maxExceedanceCount = parseInt(maxExceedanceInput.value, 10) || 3;
 showExceedanceContainer = showExceedanceBox.checked;
 // **核心變更：儲存偏移量**
@@ -1022,8 +1023,8 @@ try {
 const settings = JSON.parse(saved);
 // **核心變更：載入已儲存的偏移量**
 decibelOffset = settings.decibelOffset || 0;
-decibelThreshold = settings.decibelThreshold || 53;
-maxDecibelLimit = settings.maxDecibelLimit || 63;
+decibelThreshold = settings.decibelThreshold || 40;
+maxDecibelLimit = settings.maxDecibelLimit || 47;
 maxExceedanceCount = settings.maxExceedanceCount || 3;
 showExceedanceContainer = settings.showExceedanceContainer !== false;
 
